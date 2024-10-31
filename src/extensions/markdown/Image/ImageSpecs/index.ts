@@ -1,5 +1,5 @@
 import type {ExtensionAuto} from '../../../../core';
-import {nodeTypeFactory} from '../../../../utils/schema';
+import {nodeTypeFactory} from '../../../../utils';
 
 export const imageNodeName = 'image';
 export const imageType = nodeTypeFactory(imageNodeName);
@@ -53,14 +53,25 @@ export const ImageSpecs: ExtensionAuto = (builder) => {
             },
         },
         toMd: (state, {attrs}) => {
-            state.write(
-                '![' +
-                    state.esc(attrs.alt || '') +
-                    '](' +
-                    state.esc(attrs.src) +
-                    (attrs.title ? ' ' + state.quote(attrs.title) : '') +
-                    ')',
-            );
+            let result = '![';
+
+            if (attrs.alt) {
+                result += state.esc(attrs.alt);
+            }
+
+            result += '](';
+
+            if (attrs.src) {
+                result += state.esc(attrs.src);
+            }
+
+            if (attrs.title) {
+                result += ` ${state.quote(attrs.title)}`;
+            }
+
+            result += ')';
+
+            state.write(result);
         },
     }));
 };

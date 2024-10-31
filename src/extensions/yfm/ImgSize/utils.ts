@@ -1,7 +1,8 @@
 import {Node, NodeType} from 'prosemirror-model';
+import {EditorView} from 'prosemirror-view';
 
 import {logger} from '../../../logger';
-import {UploadSuccessItem} from '../../../utils/upload';
+import {UploadSuccessItem, getProportionalSize} from '../../../utils';
 import {imageNodeName} from '../../markdown';
 import {ImgSizeAttr} from '../../specs';
 
@@ -12,19 +13,19 @@ export function isImageNode(node: Node): boolean {
 }
 
 export type CreateImageNodeOptions = {
-    needDimmensions: boolean;
+    needDimensions: boolean;
 };
 
 export const createImageNode =
-    (imgType: NodeType, opts: CreateImageNodeOptions) =>
+    (imgType: NodeType, opts: CreateImageNodeOptions, view: EditorView) =>
     async ({result, file}: UploadSuccessItem) => {
         const attrs: Record<string, string> = {
             [ImgSizeAttr.Src]: result.url,
             [ImgSizeAttr.Alt]: result.name ?? file.name,
         };
-        if (opts.needDimmensions) {
+        if (opts.needDimensions) {
             try {
-                const sizes = await loadImage(file).then(getImageSize);
+                const sizes = await loadImage(file).then(getImageSize(view));
                 Object.assign(attrs, sizes);
             } catch (err) {
                 logger.error(err);
@@ -45,9 +46,18 @@ export async function loadImage(imgFile: File) {
     });
 }
 
-export function getImageSize(img: HTMLImageElement): {
-    [ImgSizeAttr.Width]?: string;
-    [ImgSizeAttr.Height]?: string;
-} {
-    return {height: String(Math.min(IMG_MAX_HEIGHT, img.height))};
+export function getImageSize(view: EditorView) {
+    const editorWidth = view.dom.clientWidth;
+    return function ({width, height}: HTMLImageElement): {
+        [ImgSizeAttr.Width]?: string;
+        [ImgSizeAttr.Height]?: string;
+    } {
+        const size = getProportionalSize({
+            width,
+            height,
+            editorWidth,
+            imgMaxHeight: IMG_MAX_HEIGHT,
+        });
+        return {width: String(size.width), height: String(size.height)};
+    };
 }

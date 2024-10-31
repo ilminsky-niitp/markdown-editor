@@ -2,7 +2,7 @@ import {Node} from 'prosemirror-model';
 import {EditorView} from 'prosemirror-view';
 
 import {logger} from '../../../../logger';
-import {FileUploadHandler, UploadSuccessItem} from '../../../../utils/upload';
+import {FileUploadHandler, UploadSuccessItem, getProportionalSize} from '../../../../utils';
 import {FilesBatchUploadProcess} from '../../../behavior/utils/upload';
 import {imageType} from '../../../markdown';
 import {IMG_MAX_HEIGHT} from '../const';
@@ -25,11 +25,14 @@ export class ImagesUploadProcess extends FilesBatchUploadProcess {
         super(view, files, uploadHandler);
 
         this.initPosition = position;
-        this.createImage = createImageNode(imageType(this.view.state.schema), opts);
+        this.createImage = createImageNode(imageType(this.view.state.schema), opts, this.view);
     }
 
     protected async createSkeleton() {
-        return new ImageSkeletonDescriptor(this.initPosition, await getSkeletonSize(this.files));
+        return new ImageSkeletonDescriptor(
+            this.initPosition,
+            await getSkeletonSize(this.files, this.view),
+        );
     }
 
     protected async createPMNode(res: UploadSuccessItem): Promise<Node> {
@@ -37,11 +40,12 @@ export class ImagesUploadProcess extends FilesBatchUploadProcess {
     }
 }
 
-async function getSkeletonSize(files: readonly File[]) {
+async function getSkeletonSize(files: readonly File[], view: EditorView) {
     const skeletonSize = {width: '300', height: '200'};
     if (files.length === 1) {
         try {
-            const size = await loadImage(files[0]).then(calcSkeletonSize);
+            const size = await loadImage(files[0]).then(calcSkeletonSize(view));
+
             skeletonSize.width = String(size.width);
             skeletonSize.height = String(size.height);
         } catch (err) {
@@ -51,10 +55,15 @@ async function getSkeletonSize(files: readonly File[]) {
     return skeletonSize;
 }
 
-function calcSkeletonSize(img: HTMLImageElement): {width: number; height: number} {
-    const {width, height} = img;
-    if (height <= IMG_MAX_HEIGHT) return {width, height};
+function calcSkeletonSize(view: EditorView) {
+    const editorWidth = view.dom.clientWidth;
 
-    const ratio = IMG_MAX_HEIGHT / height; // ratio<1
-    return {height: IMG_MAX_HEIGHT, width: width * ratio};
+    return function ({width, height}: HTMLImageElement): {width: number; height: number} {
+        return getProportionalSize({
+            width,
+            height,
+            editorWidth,
+            imgMaxHeight: IMG_MAX_HEIGHT,
+        });
+    };
 }

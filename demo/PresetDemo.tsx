@@ -11,7 +11,7 @@ import {
     logger,
     useMarkdownEditor,
 } from '../src';
-import type {FileUploadHandler} from '../src/utils/upload';
+import type {FileUploadHandler} from '../src';
 import {VERSION} from '../src/version';
 
 import {WysiwygSelection} from './PMSelection';

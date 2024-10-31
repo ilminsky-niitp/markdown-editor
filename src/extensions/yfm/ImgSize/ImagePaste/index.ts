@@ -5,7 +5,7 @@ import {dropPoint} from 'prosemirror-transform';
 
 import {ExtensionAuto} from '../../../../core';
 import {isFunction} from '../../../../lodash';
-import {FileUploadHandler} from '../../../../utils/upload';
+import {FileUploadHandler} from '../../../../utils';
 import {clipboardUtils} from '../../../behavior/Clipboard';
 import {ImageAttr, ImgSizeAttr, imageType} from '../../../specs';
 import {CreateImageNodeOptions, isImageNode} from '../utils';
@@ -14,7 +14,7 @@ import {ImagesUploadProcess} from './upload';
 
 const {isFilesFromHtml, isFilesOnly, isImageFile} = clipboardUtils;
 
-export type ImagePasteOptions = Pick<CreateImageNodeOptions, 'needDimmensions'> & {
+export type ImagePasteOptions = Pick<CreateImageNodeOptions, 'needDimensions'> & {
     imageUploadHandler: FileUploadHandler;
 };
 
