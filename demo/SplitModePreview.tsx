@@ -53,6 +53,9 @@ export const SplitModePreview: React.FC<SplitModePreviewProps> = (props) => {
                     linkAttrs: [[ML_ATTR, true]],
                     defaultClassName: colorClassName,
                 }).result;
+
+                console.log(res)
+                
                 setHtml(res.html);
                 setMeta(res.meta);
             }, 200),
